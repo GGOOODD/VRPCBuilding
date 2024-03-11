@@ -25,7 +25,7 @@ public class AttachObject : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         current = attachPoint.transform.lossyScale;
         interactable.selectExited.AddListener(CheckAttach);
-        interactable.selectEntered.AddListener(CheckUnAttach);
+        //interactable.selectEntered.AddListener(CheckUnAttach);
     }
 
     private void CheckAttach(SelectExitEventArgs args)
@@ -44,8 +44,13 @@ public class AttachObject : MonoBehaviour
             attachPoint.transform.localPosition = new Vector3(0f, 0f, 0f);
             attachPoint.transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
             attachCheck = 1;
-            connectorMeshRend.material = invis;
+            StartCoroutine(ReturnInvis(0.1f));
         }
+    }
+    private IEnumerator ReturnInvis(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        connectorMeshRend.material = invis;
     }
     private void CheckUnAttach(SelectEnterEventArgs args)
     {
