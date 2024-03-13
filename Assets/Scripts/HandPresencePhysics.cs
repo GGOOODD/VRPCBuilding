@@ -54,9 +54,9 @@ public class HandPresencePhysics : MonoBehaviour
     void FixedUpdate()
     {
         rb.velocity = (target.position - transform.position) / Time.fixedDeltaTime;
-        if (rb.velocity.magnitude > 5)
+        if (rb.velocity.magnitude > 2)
         {
-            rb.velocity = rb.velocity.normalized * 5;
+            rb.velocity = rb.velocity.normalized * 2;
         }
         
         Quaternion rotationDifference = target.rotation * Quaternion.Inverse(transform.rotation);
@@ -65,9 +65,9 @@ public class HandPresencePhysics : MonoBehaviour
         Vector3 rotationDifferenceInDegree = angleInDegree * rotationAxis;
 
         rb.angularVelocity = (rotationDifferenceInDegree * Mathf.Deg2Rad) / Time.fixedDeltaTime;
-        if (rb.angularVelocity.magnitude > 20)
-        {
-            rb.angularVelocity = rb.angularVelocity.normalized * 20;
-        }
+        //if (rb.angularVelocity.magnitude > 180)
+        //{
+        //    rb.angularVelocity = rb.angularVelocity.normalized * 180;
+        //}
     }
 }
