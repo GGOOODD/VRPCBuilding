@@ -1,23 +1,20 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
-using static System.Math;
 
 public class AttachObject : MonoBehaviour
 {
     public GameObject attachPoint;
     public Material invis;
     public Material correct;
-    public Material wrong;
     private XRGrabInteractable interactable;
     private Rigidbody rb;
     private Collider checkCollider;
     private Vector3 current;
     private int check = 0;
     private int attachCheck = 0;
+    private int attachHelp = 0;
     private MeshRenderer connectorMeshRend;
-    private float color;
 
     void Start()
     {
@@ -25,56 +22,79 @@ public class AttachObject : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         current = attachPoint.transform.lossyScale;
         interactable.selectExited.AddListener(CheckAttach);
-        //interactable.selectEntered.AddListener(CheckUnAttach);
+        interactable.selectEntered.AddListener(CheckUnAttach);
+        //Debug.Log("...");
     }
 
     private void CheckAttach(SelectExitEventArgs args)
     {
         if (attachCheck == 1) {
-            attachPoint.transform.parent = null;
-            attachPoint.transform.localScale = current;
-            rb.isKinematic = false;
+            //rb.isKinematic = false;
             attachCheck = 0;
         }
         if (check == 1 && Vector3.Distance(attachPoint.transform.position, checkCollider.gameObject.transform.position) <= 2
             && Quaternion.Angle(attachPoint.transform.rotation, checkCollider.gameObject.transform.rotation) <= 30) {
-            Debug.Log("Inside");
-            rb.isKinematic = true;
+            //rb.isKinematic = true;
             attachPoint.transform.SetParent(checkCollider.gameObject.transform, true);
             attachPoint.transform.localPosition = new Vector3(0f, 0f, 0f);
             attachPoint.transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+            attachPoint.transform.parent = null;
+            attachPoint.transform.localScale = current;
+            attachPoint.AddComponent<FixedJoint>();
+            attachPoint.GetComponent<FixedJoint>().connectedBody = checkCollider.GetComponentInParent<Rigidbody>();
+            checkCollider.tag = "Unavailable";
             attachCheck = 1;
-            StartCoroutine(ReturnInvis(0.1f));
+            attachHelp = 1;
         }
-    }
-    private IEnumerator ReturnInvis(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        connectorMeshRend.material = invis;
     }
     private void CheckUnAttach(SelectEnterEventArgs args)
     {
-        if (attachCheck == 1) {
-            connectorMeshRend.material = correct;
+        if (attachHelp == 1) {
+            checkCollider.tag = attachPoint.tag;
+            //attachPoint.transform.parent = null;
+            //attachPoint.transform.localScale = current;
+            Destroy(attachPoint.GetComponent<FixedJoint>());
+            attachHelp = 0;
         }
     }
     void OnTriggerEnter(Collider collider)
     {
-        Debug.Log("check?");
-        connectorMeshRend = collider.gameObject.GetComponent<MeshRenderer>();
-        if (attachPoint.tag == collider.gameObject.tag) {
-            checkCollider = collider;
-            check = 1;
-            connectorMeshRend.material = correct;
-        } else
+        if (checkCollider != null)
         {
-            connectorMeshRend.material = wrong;
+            Debug.Log("3");
+            connectorMeshRend.material = invis;
+        }
+        if (attachPoint != collider.gameObject && attachPoint.tag == collider.gameObject.tag)
+        {
+            checkCollider = collider;
+            connectorMeshRend = checkCollider.gameObject.GetComponent<MeshRenderer>();
+            check = 1;
+        }
+    }
+    void OnTriggerStay(Collider collider)
+    {
+        if (attachHelp == 1)
+        {
+            Debug.Log("1");
+            connectorMeshRend.material = invis;
+        } else if (check == 1 && Vector3.Distance(attachPoint.transform.position, checkCollider.gameObject.transform.position) <= 2
+            && Quaternion.Angle(attachPoint.transform.rotation, checkCollider.gameObject.transform.rotation) <= 30)
+        {
+            connectorMeshRend.material = correct;
+        } else if (check == 1)
+        {
+            Debug.Log("2");
+            connectorMeshRend.material = invis;
         }
     }
     void OnTriggerExit(Collider collider) {
-        if (checkCollider.name == collider.gameObject.name)
+        if (checkCollider != null && attachHelp == 0 && checkCollider.gameObject == collider.gameObject)
+        {
+            Debug.Log("4");
+            connectorMeshRend.material = invis;
+            checkCollider = null;
+            connectorMeshRend = null;
             check = 0;
-        connectorMeshRend = collider.gameObject.GetComponent<MeshRenderer>();
-        connectorMeshRend.material = invis;
+        }
     }
 }

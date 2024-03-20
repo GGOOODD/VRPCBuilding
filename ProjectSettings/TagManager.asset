@@ -6,6 +6,13 @@ TagManager:
   tags:
   - Anchor
   - PCI-E x16
+  - CPU
+  - RAM
+  - Micro-ATX
+  - Unavailable
+  - Cooler
+  - HDD 3.5
+  - Power supply ATX
   layers:
   - Default
   - TransparentFX
