@@ -69,17 +69,20 @@ public class AttachObject : MonoBehaviour
     }
     void OnTriggerEnter(Collider collider)
     {
-        if (checkCollider != null)
+        if (attachHelp == 0)
         {
-            //Debug.Log("3");
-            connectorMeshRend.material = invis;
-        }
-        if (attachPoint != collider.gameObject && attachPoint.tag == collider.gameObject.tag)
-        {
-            checkCollider = collider;
-            connectorMeshRend = checkCollider.gameObject.GetComponent<MeshRenderer>();
-            //connectorMeshRend.material = correct;
-            check = 1;
+            if (checkCollider != null)
+            {
+                //Debug.Log("3");
+                connectorMeshRend.material = invis;
+            }
+            if (attachPoint != collider.gameObject && attachPoint.tag == collider.gameObject.tag)
+            {
+                checkCollider = collider;
+                connectorMeshRend = checkCollider.gameObject.GetComponent<MeshRenderer>();
+                //connectorMeshRend.material = correct;
+                check = 1;
+            }
         }
     }
 
