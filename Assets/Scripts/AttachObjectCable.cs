@@ -16,7 +16,7 @@ public class AttachObjectCable : MonoBehaviour
     private int attachHelp = 0;
     private MeshRenderer connectorMeshRend;
     private Transform oldParent;
-    private Transform newChild;
+    //private Transform newChild;
 
     void Start()
     {
@@ -47,18 +47,18 @@ public class AttachObjectCable : MonoBehaviour
         {
             //rb.isKinematic = true;
             oldParent = attachPoint.transform.parent;
-            newChild = attachPoint.transform;
-            while (newChild.transform.parent != null)
-                newChild = newChild.transform.parent;
-            Vector3 currentNewChild = newChild.transform.lossyScale;
+            //newChild = attachPoint.transform;
+            //while (newChild.transform.parent != null)
+            //    newChild = newChild.transform.parent;
+            //Vector3 currentNewChild = newChild.transform.lossyScale;
             attachPoint.transform.parent = null;
             attachPoint.transform.localScale = current;
-            newChild.transform.SetParent(attachPoint.transform, true);
+            //newChild.transform.SetParent(attachPoint.transform, true);
             attachPoint.transform.SetParent(checkCollider.gameObject.transform, true);
             attachPoint.transform.localPosition = new Vector3(0f, 0f, 0f);
             attachPoint.transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
-            newChild.transform.parent = null;
-            newChild.transform.localScale = currentNewChild;
+            //newChild.transform.parent = null;
+            //newChild.transform.localScale = currentNewChild;
             attachPoint.transform.parent = oldParent;
             attachPoint.AddComponent<FixedJoint>();
             attachPoint.GetComponent<FixedJoint>().connectedBody = checkCollider.GetComponentInParent<Rigidbody>();
