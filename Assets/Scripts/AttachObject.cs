@@ -15,6 +15,8 @@ public class AttachObject : MonoBehaviour
     private int attachCheck = 0;
     private int attachHelp = 0;
     private MeshRenderer connectorMeshRend;
+    private Transform oldParent;
+    private Transform newChild;
 
     void Start()
     {
@@ -44,11 +46,20 @@ public class AttachObject : MonoBehaviour
         if (check == 1 && Quaternion.Angle(attachPoint.transform.rotation, checkCollider.gameObject.transform.rotation) <= 30)
         {
             //rb.isKinematic = true;
+            oldParent = attachPoint.transform.parent;
+            newChild = attachPoint.transform;
+            while (newChild.transform.parent != null)
+                newChild = newChild.transform.parent;
+            Vector3 currentNewChild = newChild.transform.lossyScale;
+            attachPoint.transform.parent = null;
+            attachPoint.transform.localScale = current;
+            newChild.transform.SetParent(attachPoint.transform, true);
             attachPoint.transform.SetParent(checkCollider.gameObject.transform, true);
             attachPoint.transform.localPosition = new Vector3(0f, 0f, 0f);
             attachPoint.transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
-            attachPoint.transform.parent = null;
-            attachPoint.transform.localScale = current;
+            newChild.transform.parent = null;
+            newChild.transform.localScale = currentNewChild;
+            attachPoint.transform.parent = oldParent;
             attachPoint.AddComponent<FixedJoint>();
             attachPoint.GetComponent<FixedJoint>().connectedBody = checkCollider.GetComponentInParent<Rigidbody>();
             checkCollider.tag = "Unavailable";

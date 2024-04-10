@@ -13,6 +13,10 @@ TagManager:
   - Cooler
   - HDD 3.5
   - Power supply ATX
+  - CPU power
+  - GPU power
+  - Motherboard1 power
+  - Motherboard2 power
   layers:
   - Default
   - TransparentFX
@@ -23,7 +27,7 @@ TagManager:
   - Left Hand Physics
   - Right Hand Physics
   - Non Physics Hand
-  - 
+  - Wire
   - 
   - 
   - 

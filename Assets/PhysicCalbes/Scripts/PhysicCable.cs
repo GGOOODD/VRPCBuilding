@@ -12,11 +12,11 @@ namespace HPhysic
         [SerializeField, Min(0.01f)] private float size = 0.3f;
 
         [Header("Bahaviour")]
-        [SerializeField, Min(1f)] private float springForce = 200;
-        [SerializeField, Min(1f)] private float brakeLengthMultiplier = 2f;
-        [SerializeField, Min(0.1f)] private float minBrakeTime = 1f;
-        private float brakeLength;
-        private float timeToBrake = 1f;
+        //[SerializeField, Min(1f)] private float springForce = 200;
+        //[SerializeField, Min(1f)] private float brakeLengthMultiplier = 2f;
+        //[SerializeField, Min(0.1f)] private float minBrakeTime = 1f;
+        //private float brakeLength;
+        //private float timeToBrake = 1f;
 
         [Header("Object to set")]
         [SerializeField, Required] private GameObject start;
@@ -64,7 +64,7 @@ namespace HPhysic
                 cPoint.transform.localScale = Vector3.one * size;
                 cPoint.transform.rotation = transform.rotation;
 
-                SetSpirng(cPoint.GetComponent<SpringJoint>(), lasBody);
+                SetSpirng(cPoint.GetComponent<ConfigurableJoint>(), lasBody);
 
                 lasBody = cPoint.GetComponent<Rigidbody>();
 
@@ -76,12 +76,11 @@ namespace HPhysic
 
             Vector3 endPos = CountNewPointPos(lastPos);
             end.transform.position = endPos;
-            SetSpirng(lasBody.gameObject.AddComponent<SpringJoint>(), end.GetComponent<Rigidbody>());
+            SetSpirng(end.GetComponent<ConfigurableJoint>(), lasBody);
 
             GameObject endConnector = CreateNewCon(numberOfPoints);
             endConnector.transform.position = CountConPos(lastPos, endPos);
             endConnector.transform.rotation = CountRoationOfCon(lastPos, endPos);
-
 
             Vector3 CountNewPointPos(Vector3 lastPos) => lastPos + transform.forward * space;
         }
@@ -97,7 +96,7 @@ namespace HPhysic
             }
 
             Rigidbody endRB = end.GetComponent<Rigidbody>();
-            foreach (var spring in lastprevPoint.GetComponents<SpringJoint>())
+            foreach (var spring in lastprevPoint.GetComponents<ConfigurableJoint>())
                 if (spring.connectedBody == endRB)
                     DestroyImmediate(spring);
 
@@ -108,8 +107,8 @@ namespace HPhysic
             cPoint.transform.rotation = end.transform.rotation;
             cPoint.transform.localScale = Vector3.one * size;
 
-            SetSpirng(cPoint.GetComponent<SpringJoint>(), lastprevPoint.GetComponent<Rigidbody>());
-            SetSpirng(cPoint.AddComponent<SpringJoint>(), endRB);
+            SetSpirng(cPoint.GetComponent<ConfigurableJoint>(), lastprevPoint.GetComponent<Rigidbody>());
+            SetSpirng(cPoint.AddComponent<ConfigurableJoint>(), endRB);
 
             // fix end
             end.transform.position += end.transform.forward * space;
@@ -153,7 +152,7 @@ namespace HPhysic
 
 
             Rigidbody endRB = end.GetComponent<Rigidbody>();
-            SetSpirng(lastlastprevPoint.gameObject.AddComponent<SpringJoint>(), endRB);
+            SetSpirng(lastlastprevPoint.gameObject.AddComponent<ConfigurableJoint>(), endRB);
 
             end.transform.position = lastprevPoint.position;
             end.transform.rotation = lastprevPoint.rotation;
@@ -167,10 +166,10 @@ namespace HPhysic
 
         private void Start()
         {
-            startConnector = start.GetComponent<Connector>();
-            endConnector = end.GetComponent<Connector>();
+            //startConnector = start.GetComponent<Connector>();
+            //endConnector = end.GetComponent<Connector>();
 
-            brakeLength = space * numberOfPoints * brakeLengthMultiplier + 2f;
+            //brakeLength = space * numberOfPoints * brakeLengthMultiplier + 2f;
 
             points = new List<Transform>();
             connectors = new List<Transform>();
@@ -204,11 +203,8 @@ namespace HPhysic
             points.Add(end.transform);
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
-            float cableLength = 0f;
-            bool isConnected = false; //startConnector.IsConnected || endConnector.IsConnected;
-
             int numOfParts = connectors.Count;
             Transform lastPoint = points[0];
             for (int i = 0; i < numOfParts; i++)
@@ -226,28 +222,7 @@ namespace HPhysic
                     connector.localScale = CountSizeOfCon(lastPoint.position, nextPoint.position);
                 }
 
-                if (isConnected)
-                    cableLength += (lastPoint.position - nextPoint.position).magnitude;
-
                 lastPoint = nextPoint;
-            }
-
-            if (isConnected)
-            {
-                if (cableLength > brakeLength)
-                {
-                    timeToBrake -= Time.deltaTime;
-                    if (timeToBrake < 0f)
-                    {
-                        startConnector.Disconnect();
-                        endConnector.Disconnect();
-                        timeToBrake = minBrakeTime;
-                    }
-                }
-                else
-                {
-                    timeToBrake = minBrakeTime;
-                }
             }
         }
 
@@ -260,17 +235,56 @@ namespace HPhysic
         private Transform GetPoint(int index) => index > 0 ? transform.Find(PointName(index)) : point0.transform;
 
 
-        public void SetSpirng(SpringJoint spring, Rigidbody connectedBody)
+        public void SetSpirng(ConfigurableJoint spring, Rigidbody connectedBody)
         {
             spring.connectedBody = connectedBody;
-            spring.spring = springForce;
-            spring.damper = 0.2f;
-            spring.autoConfigureConnectedAnchor = false;
-            spring.anchor = Vector3.zero;
-            spring.connectedAnchor = Vector3.zero;
-            spring.minDistance = space;
-            spring.maxDistance = space;
+            spring.anchor = new Vector3(0f, 0f, 0f);
+            spring.axis = new Vector3(0f, 0f, 1f);
+            spring.xMotion = ConfigurableJointMotion.Locked;
+            spring.yMotion = ConfigurableJointMotion.Locked;
+            spring.zMotion = ConfigurableJointMotion.Locked;
+            spring.angularXMotion = ConfigurableJointMotion.Limited;
+            spring.angularYMotion = ConfigurableJointMotion.Limited;
+            spring.angularZMotion = ConfigurableJointMotion.Limited;
+            SoftJointLimitSpring limit_spring = new()
+            {
+                spring = 10f,
+                damper = 1f
+            };
+            spring.angularXLimitSpring = limit_spring;
+            SoftJointLimit limit = new()
+            {
+                limit = -10f,
+                bounciness = 0f,
+                contactDistance = 0f
+            };
+            spring.lowAngularXLimit = limit;
+            limit.limit = 10f;
+            spring.highAngularXLimit = limit;
+            spring.angularYZLimitSpring = limit_spring;
+            limit.limit = 20f;
+            spring.angularYLimit = limit;
+            spring.angularZLimit = limit;
+            JointDrive drive = new()
+            {
+                positionSpring = 4000f,
+                positionDamper = 3f,
+                maximumForce = 3.402823e+38f,
+                useAcceleration = false
+            };
+            spring.xDrive = drive;
+            spring.yDrive = drive;
+            spring.zDrive = drive;
+            drive.positionSpring = 10f;
+            drive.positionDamper = 0f;
+            spring.angularXDrive = drive;
+            spring.angularYZDrive = drive;
+            spring.projectionMode = JointProjectionMode.PositionAndRotation;
+            spring.projectionDistance = 0.01f;
+            spring.projectionAngle = 0f;
+            spring.enablePreprocessing = false;
         }
+
         private GameObject CreateNewPoint(int index)
         {
             GameObject temp = Instantiate(point0);
@@ -278,6 +292,7 @@ namespace HPhysic
             temp.transform.parent = transform;
             return temp;
         }
+
         private GameObject CreateNewCon(int index)
         {
             GameObject temp = Instantiate(connector0);
