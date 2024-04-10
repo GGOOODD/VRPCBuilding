@@ -18,6 +18,8 @@ public class AttachObject : MonoBehaviour
     private Transform oldParent;
     private Transform newChild;
 
+    public GameObject HostMotherboard = null;
+
     void Start()
     {
         interactable = GetComponent<XRGrabInteractable>();
@@ -65,6 +67,15 @@ public class AttachObject : MonoBehaviour
             checkCollider.tag = "Unavailable";
             attachCheck = 1;
             attachHelp = 1;
+
+            if (HostMotherboard != null)
+            {
+                MotherboardCommon motherboardCommon = HostMotherboard.GetComponent<MotherboardCommon>();
+                if (motherboardCommon != null)
+                {
+                    motherboardCommon.ConnectObject(checkCollider.gameObject, gameObject);
+                }
+            }
         }
     }
     private void CheckUnAttach(SelectEnterEventArgs args)
@@ -76,6 +87,15 @@ public class AttachObject : MonoBehaviour
             //attachPoint.transform.localScale = current;
             Destroy(attachPoint.GetComponent<FixedJoint>());
             attachHelp = 0;
+
+            if (HostMotherboard != null)
+            {
+                MotherboardCommon motherboardCommon = HostMotherboard.GetComponent<MotherboardCommon>();
+                if (motherboardCommon != null)
+                {
+                    motherboardCommon.DetachObject(checkCollider.gameObject, gameObject);
+                }
+            }
         }
     }
     void OnTriggerEnter(Collider collider)
