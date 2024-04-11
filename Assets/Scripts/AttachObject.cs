@@ -8,46 +8,31 @@ public class AttachObject : MonoBehaviour
     public Material invis;
     public Material correct;
     private XRGrabInteractable interactable;
-    private Rigidbody rb;
+    //private Rigidbody rb;
     private Collider checkCollider;
     private Vector3 current;
     private int check = 0;
     private int attachCheck = 0;
-    private int attachHelp = 0;
     private MeshRenderer connectorMeshRend;
     private Transform oldParent;
     private Transform newChild;
 
     public GameObject HostMotherboard = null;
 
+    //Debug.Log("...");
     void Start()
     {
         interactable = GetComponent<XRGrabInteractable>();
-        rb = GetComponent<Rigidbody>();
+        //rb = GetComponent<Rigidbody>();
         current = attachPoint.transform.lossyScale;
         interactable.selectExited.AddListener(CheckAttach);
         interactable.selectEntered.AddListener(CheckUnAttach);
-        //Debug.Log("...");
     }
-    //void FixedUpdate()
-    //{
-        //if(attachHelp == 1)
-        //{
-            //attachPoint.transform.localPosition = new Vector3(0f, 0f, 0f);
-            //attachPoint.transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
-        //}
-    //}
 
     private void CheckAttach(SelectExitEventArgs args)
     {
-        if (attachCheck == 1) {
-            //rb.isKinematic = false;
-            attachCheck = 0;
-        }
-        // Vector3.Distance(attachPoint.transform.position, checkCollider.gameObject.transform.position) <= 2
         if (check == 1 && Quaternion.Angle(attachPoint.transform.rotation, checkCollider.gameObject.transform.rotation) <= 30)
         {
-            //rb.isKinematic = true;
             oldParent = attachPoint.transform.parent;
             newChild = attachPoint.transform;
             while (newChild.transform.parent != null)
@@ -66,7 +51,6 @@ public class AttachObject : MonoBehaviour
             attachPoint.GetComponent<FixedJoint>().connectedBody = checkCollider.GetComponentInParent<Rigidbody>();
             checkCollider.tag = "Unavailable";
             attachCheck = 1;
-            attachHelp = 1;
 
             if (HostMotherboard != null)
             {
@@ -80,13 +64,11 @@ public class AttachObject : MonoBehaviour
     }
     private void CheckUnAttach(SelectEnterEventArgs args)
     {
-        if (attachHelp == 1)
+        if (attachCheck == 1)
         {
             checkCollider.tag = attachPoint.tag;
-            //attachPoint.transform.parent = null;
-            //attachPoint.transform.localScale = current;
             Destroy(attachPoint.GetComponent<FixedJoint>());
-            attachHelp = 0;
+            attachCheck = 0;
 
             if (HostMotherboard != null)
             {
@@ -100,18 +82,16 @@ public class AttachObject : MonoBehaviour
     }
     void OnTriggerEnter(Collider collider)
     {
-        if (attachHelp == 0)
+        if (attachCheck == 0)
         {
             if (checkCollider != null)
             {
-                //Debug.Log("3");
                 connectorMeshRend.material = invis;
             }
             if (attachPoint != collider.gameObject && attachPoint.tag == collider.gameObject.tag)
             {
                 checkCollider = collider;
                 connectorMeshRend = checkCollider.gameObject.GetComponent<MeshRenderer>();
-                //connectorMeshRend.material = correct;
                 check = 1;
             }
         }
@@ -119,7 +99,7 @@ public class AttachObject : MonoBehaviour
 
     void OnTriggerStay(Collider collider)
     {
-        if (check == 1 && attachHelp != 1 && Quaternion.Angle(attachPoint.transform.rotation, checkCollider.gameObject.transform.rotation) <= 30)
+        if (check == 1 && attachCheck != 1 && Quaternion.Angle(attachPoint.transform.rotation, checkCollider.gameObject.transform.rotation) <= 30)
         {
             connectorMeshRend.material = correct;
         } else if (check == 1)
@@ -129,9 +109,8 @@ public class AttachObject : MonoBehaviour
     }
 
     void OnTriggerExit(Collider collider) {
-        if (checkCollider != null && attachHelp == 0 && checkCollider.gameObject == collider.gameObject)
+        if (checkCollider != null && attachCheck == 0 && checkCollider.gameObject == collider.gameObject)
         {
-            //Debug.Log("4");
             connectorMeshRend.material = invis;
             checkCollider = null;
             connectorMeshRend = null;
