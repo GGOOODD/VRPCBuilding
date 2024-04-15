@@ -17,6 +17,7 @@ TagManager:
   - GPU power
   - Motherboard1 power
   - Motherboard2 power
+  - Pliers
   layers:
   - Default
   - TransparentFX
