@@ -1,0 +1,110 @@
+title = "Tag IDs"
+
+# 00 - тип объекта (PC Components)
+# 00.00 - тип типа объекта (CPU)
+# 00.000.0000 - тип типа типа объекта (AM4)
+# 00.000.0000.0000 - модель объекта (AMD Ryzen 5600)
+
+# +00.000.0000.0000
+
+[tags]
+
+[tags.01]
+name = "PC Components"
+description = "Что-тотототтото"
+
+[tags.01.001]
+name = "CPU"
+
+[tags.01.001.0001]
+name = "AM4"
+
+[tags.01.001.0001.0001]
+name = "AMD Ryzen 2700X"
+
+[tags.01.002]
+name = "GPU"
+
+[tags.01.002.0001]
+name = "PCI-E x16"
+
+[tags.01.002.0001.0001]
+name = "GIGABYTE GeForce GTX 1660 SUPER"
+
+[tags.01.003]
+name = "Motherboard"
+
+[tags.01.003.0001]
+name = "Micro-ATX"
+
+[tags.01.003.0001.0001]
+name = "ASUS ROG STRIX X470-I GAMING"
+
+[tags.01.004]
+name = "RAM"
+
+[tags.01.004.0001]
+name = "DDR4"
+
+[tags.01.004.0001.0001]
+name = "Kingston Hyperx Fury 16GB"
+
+[tags.01.004.0002]
+name = "DDR3"
+
+[tags.01.004.0001.0001]
+name = "DEXP [DEXP4GD3UD16] 4 ГБ"
+
+[tags.01.005]
+name = "Disk"
+
+[tags.01.005.0001]
+name = "SATA 3"
+
+[tags.01.005.0001.0001]
+name = "WD Blue 1TB"
+
+[tags.01.006]
+name = "Power Supply"
+
+[tags.01.006.0001]
+name = "ATX"
+
+[tags.01.006.0001.0001]
+name = "850W Thermaltake Toughpower Grand RGB"
+
+[tags.01.007]
+name = "Cooler"
+
+[tags.01.007.0001]
+name = "AM2, AM2+, AM3, AM3+, AM4, FM1, FM2, FM2+, LGA 775, LGA 1150, LGA 1151, LGA 1151-v2, LGA 1155, LGA 1156, LGA 1200, LGA 1366, LGA 2011, LGA 2011-3"
+
+[tags.01.007.0001.0001]
+name = "Thermalright TRUE Spirit 140 Power TS-140-P"
+
+[tags.02]
+name = "Cables"
+
+[tags.02.001]
+name = "CPU Power"
+
+[tags.02.001.0001]
+name = "??? pin"
+
+[tags.02.002]
+name = "GPU Power"
+
+[tags.02.002.0001]
+name = "??? pin"
+
+[tags.02.003]
+name = "Motherboard Power Power Supply"
+
+[tags.02.003.0001]
+name = "??? pin"
+
+[tags.02.004]
+name = "Motherboard Power Motherboard"
+
+[tags.02.004.0001]
+name = "??? pin"

@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Anchor
+  - PCI-E x16
+  - CPU
+  - RAM
+  - Micro-ATX
+  - Unavailable
+  - Cooler
+  - HDD 3.5
+  - Power supply ATX
+  - CPU power
+  - GPU power
+  - Motherboard1 power
+  - Motherboard2 power
+  - Pliers
+  - Pipe
+  - +01.001.0001.0001
+  - +01.002.0001.0001
+  - +01.003.0001.0001
+  - +01.004.0001.0001
+  - +01.005.0001.0001
+  - +01.006.0001.0001
+  - +02.001.0001
+  - +02.002.0001
+  - +01.007.0001.0001
+  - +02.003.0001
+  - +02.004.0001
+  - +01.004.0002.0001
+  - incmp
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - Left Hand Physics
+  - Right Hand Physics
+  - Non Physics Hand
+  - Wire
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
