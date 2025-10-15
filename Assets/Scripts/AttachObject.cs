@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
 
 [RequireComponent(typeof(Rigidbody), typeof(XRGrabInteractable), typeof(ItemCommon))]
 public class AttachObject : MonoBehaviour
@@ -19,10 +20,10 @@ public class AttachObject : MonoBehaviour
     public Material wrong;
 
     private InputActionAsset inputActions;
+    private XRInteractionManager interactionManager;
     private InputAction activateActionLeft;
-    private InputAction activateActionLeftValue;
     private InputAction activateActionRight;
-    private InputAction activateActionRightValue;
+    private IXRSelectInteractor interactor;
     private XRGrabInteractable interactable;
     //private Rigidbody rb;
     private Collider checkCollider;
@@ -56,6 +57,7 @@ public class AttachObject : MonoBehaviour
     {
         interactable = GetComponent<XRGrabInteractable>();
         objectInfo = GetComponentInParent<ItemCommon>();
+        interactionManager = GameObject.Find("XR Interaction Manager").GetComponent<XRInteractionManager>();
 
         // Отслеживание нажатия кнопки для подключения и отключения объекта
         inputActions = GameObject.Find("InputActionAsset").GetComponent<InputActionAssetInfo>()?.inputActions;
@@ -145,6 +147,7 @@ public class AttachObject : MonoBehaviour
 
     private void OnGrabEnter(SelectEnterEventArgs args)
     {
+        interactor = args.interactorObject;
         if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
             activateActionLeft.performed += TryActivateAction;
         } else {
@@ -154,6 +157,7 @@ public class AttachObject : MonoBehaviour
 
     private void OnGrabExit(SelectExitEventArgs args)
     {
+        interactor = null;
         if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
             activateActionLeft.performed -= TryActivateAction;
         } else {
@@ -213,6 +217,8 @@ public class AttachObject : MonoBehaviour
             }
             checkCollider.tag = "Unavailable";
             attachCheck = true;
+            if (interactor != null)
+                interactionManager.SelectExit(interactor, interactable);
             // Необходимо для отключения столкновений коллайдеров
             AddConnectedPart(checkCollider.transform.parent.GameObject());
             // Необходимо для блокировки процессора при подключении кулера
@@ -394,7 +400,7 @@ public class AttachObject : MonoBehaviour
         if (_highlightParent == null)
             return;
         
-        if (attachCheck)
+        if (attachCheck || interactor == null)
         {
             if (_currentMatForHightlight != invis)
                 ChangeHighlightColor(invis);

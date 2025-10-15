@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 
 [RequireComponent(typeof(Rigidbody), typeof(XRGrabInteractable))]
@@ -11,12 +12,18 @@ public class AttachObjectCable : MonoBehaviour
     public Material invis;
     public Material correct;
     public Material show;
+
+    private InputActionAsset inputActions;
+    private XRInteractionManager interactionManager;
+    private InputAction activateActionLeft;
+    private InputAction activateActionRight;
+    private IXRSelectInteractor interactor;
+
     private XRGrabInteractable interactable;
-    private Rigidbody rb;
     private Collider checkCollider;
     private Vector3 saveAttachScale;
-    private int check = 0;
-    private int attachCheck = 0;
+    private bool check = false;
+    private bool attachCheck = false;
     private MeshRenderer connectorMeshRend;
     private Transform oldParent;
 
@@ -27,10 +34,20 @@ public class AttachObjectCable : MonoBehaviour
     void Start()
     {
         interactable = GetComponent<XRGrabInteractable>();
-        rb = GetComponent<Rigidbody>();
         saveAttachScale = attachPoint.transform.localScale;
-        interactable.selectExited.AddListener(CheckAttach);
-        interactable.selectEntered.AddListener(CheckUnAttach);
+
+        interactionManager = GameObject.Find("XR Interaction Manager").GetComponent<XRInteractionManager>();
+
+        // Отслеживание нажатия кнопки для подключения и отключения объекта
+        inputActions = GameObject.Find("InputActionAsset").GetComponent<InputActionAssetInfo>()?.inputActions;
+        if (inputActions != null) {
+            activateActionLeft = inputActions.FindActionMap("XRI LeftHand Interaction").FindAction("Activate");
+            activateActionRight = inputActions.FindActionMap("XRI RightHand Interaction").FindAction("Activate");
+            interactable.selectEntered.AddListener(OnGrabEnter);
+            interactable.selectExited.AddListener(OnGrabExit);
+        } else
+            Debug.Log("InputActionAssetInfo отсутствует в сцене или не имеет ссылку на InputActionAseet! Без него не будет работать подключение объектов.");
+        
         if (MultipleConnections)
         {
             OnConnectEvents.AddListener(MultipleConOnConnect);
@@ -60,20 +77,49 @@ public class AttachObjectCable : MonoBehaviour
             {
                 checkCollider.tag = attachPoint.tag;
                 Destroy(attachPoint.GetComponent<FixedJoint>());
-                attachCheck = 0;
+                attachCheck = false;
                 connectorMeshRend.material = invis;
                 checkCollider = null;
                 connectorMeshRend = null;
-                check = 0;
+                check = false;
             }
     }
 
-    private void CheckAttach(SelectExitEventArgs args)
+    private void OnGrabEnter(SelectEnterEventArgs args)
+    {
+        interactor = args.interactorObject;
+        if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
+            activateActionLeft.performed += TryActivateAction;
+        } else {
+            activateActionRight.performed += TryActivateAction;
+        }
+    }
+
+    private void OnGrabExit(SelectExitEventArgs args)
+    {
+        interactor = null;
+        if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
+            activateActionLeft.performed -= TryActivateAction;
+        } else {
+            activateActionRight.performed -= TryActivateAction;
+        }
+    }
+
+    // Активация кнопки подключения/отключения объекта
+    private void TryActivateAction(InputAction.CallbackContext context)
+    {
+        if (attachCheck)
+            CheckUnAttach();
+        else
+            CheckAttach();
+    }
+
+    private void CheckAttach()
     {
         if (socket != null)
             socket.material = invis;
         
-        if (check == 1)
+        if (check)
         {
             oldParent = attachPoint.transform.parent;
             attachPoint.transform.SetParent(checkCollider.gameObject.transform, true);
@@ -88,34 +134,36 @@ public class AttachObjectCable : MonoBehaviour
             attachPoint.GetComponent<FixedJoint>().connectedBody = checkCollider.GetComponentInParent<Rigidbody>();
             attachPoint.GetComponent<FixedJoint>().enablePreprocessing = false;
             checkCollider.tag = "Unavailable";
-            attachCheck = 1;
+            attachCheck = true;
+            if (interactor != null)
+                interactionManager.SelectExit(interactor, interactable);
 
             OnConnectEvents.Invoke();
         }
     }
 
-    private void CheckUnAttach(SelectEnterEventArgs args)
+    private void CheckUnAttach()
     {
         if (socket != null)
             socket.material = show;
         
-        if (attachCheck == 1 && checkCollider != null)
+        if (attachCheck && checkCollider != null)
         {
             checkCollider.tag = attachPoint.tag;
             Destroy(attachPoint.GetComponent<FixedJoint>());
-            attachCheck = 0;
+            attachCheck = false;
             OnDisconnectEvents.Invoke();
-        } else if (attachCheck == 1)
+        } else if (attachCheck)
         {
             Destroy(attachPoint.GetComponent<FixedJoint>());
-            attachCheck = 0;
+            attachCheck = false;
             OnDisconnectEvents.Invoke();
         }
     }
 
     void OnTriggerEnter(Collider collider)
     {
-        if (attachCheck == 0)
+        if (!attachCheck)
         {
             if (checkCollider != null)
             {
@@ -128,24 +176,24 @@ public class AttachObjectCable : MonoBehaviour
             {
                 checkCollider = collider;
                 connectorMeshRend = checkCollider.gameObject.GetComponent<MeshRenderer>();
-                check = 1;
+                check = true;
             }
         }
     }
 
     void OnTriggerStay(Collider collider)
     {
-        if (attachCheck == 1)
+        if (attachCheck)
         {
             connectorMeshRend.material = invis;
-        } else if (check == 1)
+        } else if (check)
         {
             connectorMeshRend.material = correct;
         }
     }
 
     void OnTriggerExit(Collider collider) {
-        if (checkCollider != null && attachCheck == 0 && checkCollider.gameObject == collider.gameObject)
+        if (checkCollider != null && !attachCheck && checkCollider.gameObject == collider.gameObject)
         {
             if (socket != null && socket == connectorMeshRend)
                 socket.material = show;
@@ -153,17 +201,17 @@ public class AttachObjectCable : MonoBehaviour
                 connectorMeshRend.material = invis;
             checkCollider = null;
             connectorMeshRend = null;
-            check = 0;
+            check = false;
         }
         FixedJoint fixJoint = attachPoint.GetComponent<FixedJoint>();
         if (fixJoint != null && fixJoint.connectedBody == null)
         {
             Destroy(attachPoint.GetComponent<FixedJoint>());
-            attachCheck = 0;
+            attachCheck = false;
             OnDisconnectEvents.Invoke();
             checkCollider = null;
             connectorMeshRend = null;
-            check = 0;
+            check = false;
         }
     }
 }
