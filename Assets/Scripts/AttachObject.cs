@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NaughtyAttributes.Test;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 
 [RequireComponent(typeof(Rigidbody), typeof(XRGrabInteractable), typeof(ItemCommon))]
@@ -15,6 +17,12 @@ public class AttachObject : MonoBehaviour
     private Material invis;
     public Material correct;
     public Material wrong;
+
+    private InputActionAsset inputActions;
+    private InputAction activateActionLeft;
+    private InputAction activateActionLeftValue;
+    private InputAction activateActionRight;
+    private InputAction activateActionRightValue;
     private XRGrabInteractable interactable;
     //private Rigidbody rb;
     private Collider checkCollider;
@@ -47,14 +55,22 @@ public class AttachObject : MonoBehaviour
     void Start()
     {
         interactable = GetComponent<XRGrabInteractable>();
-        //rb = GetComponent<Rigidbody>();
         objectInfo = GetComponentInParent<ItemCommon>();
+
+        // Отслеживание нажатия кнопки для подключения и отключения объекта
+        inputActions = GameObject.Find("InputActionAsset").GetComponent<InputActionAssetInfo>()?.inputActions;
+        if (inputActions != null) {
+            activateActionLeft = inputActions.FindActionMap("XRI LeftHand Interaction").FindAction("Activate");
+            activateActionRight = inputActions.FindActionMap("XRI RightHand Interaction").FindAction("Activate");
+            interactable.selectEntered.AddListener(OnGrabEnter);
+            interactable.selectExited.AddListener(OnGrabExit);
+        } else
+            Debug.Log("InputActionAssetInfo отсутствует в сцене или не имеет ссылку на InputActionAseet! Без него не будет работать подключение объектов.");
+
         if (parent) 
             saveScale = parent.localScale;
         else
             saveScale = attachPoint.transform.localScale;
-        interactable.selectExited.AddListener(CheckAttach);
-        interactable.selectEntered.AddListener(CheckUnAttach);
         if (MultipleConnections)
         {
             OnConnectEvents.AddListener(MultipleConOnConnect);
@@ -127,8 +143,35 @@ public class AttachObject : MonoBehaviour
         }
     }
 
+    private void OnGrabEnter(SelectEnterEventArgs args)
+    {
+        if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
+            activateActionLeft.performed += TryActivateAction;
+        } else {
+            activateActionRight.performed += TryActivateAction;
+        }
+    }
 
-    private void CheckAttach(SelectExitEventArgs args)
+    private void OnGrabExit(SelectExitEventArgs args)
+    {
+        if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
+            activateActionLeft.performed -= TryActivateAction;
+        } else {
+            activateActionRight.performed -= TryActivateAction;
+        }
+    }
+
+    // Активация кнопки подключения/отключения объекта
+    private void TryActivateAction(InputAction.CallbackContext context)
+    {
+        if (attachCheck)
+            CheckUnAttach();
+        else
+            CheckAttach();
+    }
+
+    // Подключение объекта
+    private void CheckAttach()
     {
         if (check && Quaternion.Angle(attachPoint.transform.rotation, checkCollider.gameObject.transform.rotation) <= 40)
         {
@@ -163,16 +206,10 @@ public class AttachObject : MonoBehaviour
             {
                 parent.AddComponent<FixedJoint>();
                 parent.GetComponent<FixedJoint>().connectedBody = checkCollider.GetComponentInParent<Rigidbody>();
-                //Rigidbody rb = parent.GetComponent<Rigidbody>();
-                //rb.useGravity = false;
-                //rb.angularDrag = 0;
             } else
             {
                 attachPoint.AddComponent<FixedJoint>();
                 attachPoint.GetComponent<FixedJoint>().connectedBody = checkCollider.GetComponentInParent<Rigidbody>();
-                //Rigidbody rb = GetComponent<Rigidbody>();
-                //rb.useGravity = false;
-                //rb.angularDrag = 0;
             }
             checkCollider.tag = "Unavailable";
             attachCheck = true;
@@ -200,7 +237,8 @@ public class AttachObject : MonoBehaviour
         }
     }
 
-    private void CheckUnAttach(SelectEnterEventArgs args)
+    // Отключение объекта
+    private void CheckUnAttach()
     {
         if (attachCheck)
         {

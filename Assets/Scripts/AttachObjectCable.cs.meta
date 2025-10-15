@@ -3,7 +3,13 @@ guid: a1052e026bc5d7346a966e30e847e431
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - attachPoint: {instanceID: 0}
+  - socket: {instanceID: 0}
+  - invis: {fileID: 2100000, guid: 11677ace67ab21e48a0563094ef2fa7d, type: 2}
+  - correct: {fileID: 2100000, guid: 599be0a7630ba0f479d4cd05f1b34197, type: 2}
+  - show: {instanceID: 0}
+  - <MultipleConnections>k__BackingField: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
