@@ -11,6 +11,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
 
 [RequireComponent(typeof(Rigidbody), typeof(XRGrabInteractable), typeof(ItemCommon))]
+[RequireComponent(typeof(Outline))]
 public class AttachObject : MonoBehaviour
 {
     public GameObject attachPoint;
@@ -24,6 +25,7 @@ public class AttachObject : MonoBehaviour
     private InputAction activateActionLeft;
     private InputAction activateActionRight;
     private IXRSelectInteractor interactor;
+    private Outline outline;
     private XRGrabInteractable interactable;
     //private Rigidbody rb;
     private Collider checkCollider;
@@ -55,9 +57,18 @@ public class AttachObject : MonoBehaviour
     //Debug.Log("...");
     void Start()
     {
+        outline = GetComponent<Outline>();
+        outline.enabled = false;
         interactable = GetComponent<XRGrabInteractable>();
         objectInfo = GetComponentInParent<ItemCommon>();
         interactionManager = GameObject.Find("XR Interaction Manager").GetComponent<XRInteractionManager>();
+
+        // Отслеживание наведения рук на объект
+        interactable.hoverEntered.AddListener(OutlineStart);
+        interactable.hoverExited.AddListener(OutlineEnd);
+
+        // Создать модель для выделения места подключения
+        CreateHighlight();
 
         // Отслеживание нажатия кнопки для подключения и отключения объекта
         inputActions = GameObject.Find("InputActionAsset").GetComponent<InputActionAssetInfo>()?.inputActions;
@@ -99,6 +110,16 @@ public class AttachObject : MonoBehaviour
         {
             wrong = Resources.Load<Material>("Materials/Wrong");
         }
+    }
+
+    private void OutlineStart(HoverEnterEventArgs args)
+    {
+        outline.enabled = true;
+    }
+
+    private void OutlineEnd(HoverExitEventArgs args)
+    {
+        outline.enabled = false;
     }
 
     private void MultipleConOnConnect()
@@ -147,6 +168,7 @@ public class AttachObject : MonoBehaviour
 
     private void OnGrabEnter(SelectEnterEventArgs args)
     {
+        outline.enabled = false;
         interactor = args.interactorObject;
         if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
             activateActionLeft.performed += TryActivateAction;
@@ -157,6 +179,7 @@ public class AttachObject : MonoBehaviour
 
     private void OnGrabExit(SelectExitEventArgs args)
     {
+        outline.enabled = true;
         interactor = null;
         if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
             activateActionLeft.performed -= TryActivateAction;
@@ -274,10 +297,7 @@ public class AttachObject : MonoBehaviour
     // Используется для подсветки места подключения
     void CreateHighlight()
     {
-        if (checkCollider == null || _highlightParent != null)
-            return;
-
-        _highlightParent = new("parent_Highlight");
+        _highlightParent = new(name + "_highlight");
         _highlightParent.transform.SetParent(attachPoint.transform);
         _highlightParent.transform.localPosition = new Vector3(0f, 0f, 0f);
         _highlightParent.transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
@@ -285,7 +305,7 @@ public class AttachObject : MonoBehaviour
         {
             if (meshFilter.sharedMesh == null) continue;
 
-            GameObject newObj = new(meshFilter.name + "_Highlight");
+            GameObject newObj = new(meshFilter.name + "_highlight");
             newObj.transform.SetPositionAndRotation(meshFilter.transform.position, meshFilter.transform.rotation);
             newObj.transform.localScale = meshFilter.transform.lossyScale;
             newObj.transform.SetParent(_highlightParent.transform);
@@ -302,9 +322,15 @@ public class AttachObject : MonoBehaviour
             newRenderer.materials = materials;
         }
         _currentMatForHightlight = invis;
+        _highlightParent.SetActive(false);
+    }
+
+    void StartHighlight()
+    {
         _highlightParent.transform.SetParent(checkCollider.transform);
         _highlightParent.transform.localPosition = new Vector3(0f, 0f, 0f);
         _highlightParent.transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        _highlightParent.SetActive(true);
     }
 
     void ChangeHighlightColor(Material mat)
@@ -321,10 +347,15 @@ public class AttachObject : MonoBehaviour
         _currentMatForHightlight = mat;
     }
 
-    void DeleteHighlight()
+    void EndHighlight()
+    {
+        _highlightParent.SetActive(false);
+        _highlightParent.transform.SetParent(gameObject.transform);
+    }
+
+    void OnDestroy()
     {
         Destroy(_highlightParent);
-        _highlightParent = null;
     }
 
     void OnTriggerEnter(Collider collider)
@@ -390,7 +421,7 @@ public class AttachObject : MonoBehaviour
             }
             // в случае прохождения проверки запоминаем объект и начинаем отслеживать положения нашего объекта для подсветки верености подключения компонента в разъём
             checkCollider = collider;
-            CreateHighlight();
+            StartHighlight();
             check = true;
         }
     }
@@ -420,7 +451,7 @@ public class AttachObject : MonoBehaviour
         incompatibleInfo.SetActive(false);
         if (checkCollider != null && !attachCheck && checkCollider.gameObject == collider.gameObject)
         {
-            DeleteHighlight();
+            EndHighlight();
             checkCollider = null;
             check = false;
         }
