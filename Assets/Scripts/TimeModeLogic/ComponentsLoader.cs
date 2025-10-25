@@ -101,7 +101,12 @@ public class ComponentsLoader : MonoBehaviour
         }
     }
 
-    public void SpawnFullBuild()
+    public void SpawnFullBuildWrapper()
+    {
+        StartCoroutine(SpawnFullBuild());
+    }
+
+    private IEnumerator SpawnFullBuild()
     {
         Dictionary<GameObject, String> build = new();
         List<GameObject> uncomp = new();
@@ -111,9 +116,9 @@ public class ComponentsLoader : MonoBehaviour
         build.Add(motherboard, "5");
         // uint TDPLimit = 0;
         // uint PowerSupplyMaxPower = 0;
-
         List<GameObject> compatibleObjs = new();
         List<GameObject> uncompatibleObjs = new();
+
         // Выбираем процессор
         // compatibleObjs = componentPrefabs["CPU"].Where(c => c.GetComponent<ItemCommon>().GetCPUInfo().SocketType == motherboardInfo.SocketType).ToList();
         foreach (GameObject obj in componentPrefabs["CPU"])
@@ -158,13 +163,16 @@ public class ComponentsLoader : MonoBehaviour
         float spacing = 0.2f; // расстояние между компонентами
         Vector3 currentPosition = cubeCenter - cubeSize / 2 + Vector3.one * spacing;
         GameObject createdObj;
+
         foreach (var component in build)
         {
             // Добавление несовместимых частей (пока только процессор)
             if (uncomp.Count != 0 && Random.Range(0f, 1f) < 0.25f)
             {
                 GameObject uncompObj = uncomp[0];
+                yield return null;
                 createdObj = Instantiate(uncompObj, currentPosition, Quaternion.identity);
+                yield return null;
                 spawnedObjs.Add(createdObj);
                 uncomp.Remove(uncompObj);
                 currentPosition.x += spacing;
@@ -174,38 +182,44 @@ public class ComponentsLoader : MonoBehaviour
                     currentPosition.z -= spacing;
                 }
             }
+
             // Создаем экземпляр префаба
-            createdObj = Instantiate(component.Key, currentPosition, Quaternion.identity);
-            spawnedObjs.Add(createdObj);
-            // Навешиваем выполнение задач
             if (component.Value == "ram")
-            {
+            {   
                 ramCheck.Objects.Clear();
-                createdObj.GetComponent<AttachObject>().MultipleConnections = ramCheck;
-                ramCheck.Objects.Add(createdObj);
+                for (int i = 0; i < 2; i++)
+                {
+                    yield return null;
+                    createdObj = Instantiate(component.Key, currentPosition, Quaternion.identity);
+                    yield return null;
+                    createdObj.GetComponent<AttachObject>().MultipleConnections = ramCheck;
+                    ramCheck.Objects.Add(createdObj);
+                    spawnedObjs.Add(createdObj);
+
+                    currentPosition.x += spacing;
+                    if (currentPosition.x > cubeCenter.x + cubeSize.x / 2)
+                    {
+                        currentPosition.x = cubeCenter.x - cubeSize.x / 2 + spacing;
+                        currentPosition.z -= spacing;
+                    }
+                }
+                ramCheck.Restart();
+            }
+            else if (component.Value != "")
+            {
+                yield return null;
+                createdObj = Instantiate(component.Key, currentPosition, Quaternion.identity);
+                yield return null;
+                createdObj.GetComponent<AttachObject>().OnConnectEvents.AddListener(() => {taskManager.CompleteTask(component.Value);});
+                createdObj.GetComponent<AttachObject>().OnDisconnectEvents.AddListener(() => {taskManager.UncompleteTask(component.Value);});
+                spawnedObjs.Add(createdObj);
+                
                 currentPosition.x += spacing;
                 if (currentPosition.x > cubeCenter.x + cubeSize.x / 2)
                 {
                     currentPosition.x = cubeCenter.x - cubeSize.x / 2 + spacing;
                     currentPosition.z -= spacing;
                 }
-                createdObj = Instantiate(component.Key, currentPosition, Quaternion.identity);
-                createdObj.GetComponent<AttachObject>().MultipleConnections = ramCheck;
-                spawnedObjs.Add(createdObj);
-                ramCheck.Objects.Add(createdObj);
-                ramCheck.Restart();
-            }
-            else if (component.Value != "")
-            {
-                createdObj.GetComponent<AttachObject>().OnConnectEvents.AddListener(() => {taskManager.CompleteTask(component.Value);});
-                createdObj.GetComponent<AttachObject>().OnDisconnectEvents.AddListener(() => {taskManager.UncompleteTask(component.Value);});
-            }
-            // Меняем местоположение спавна
-            currentPosition.x += spacing;
-            if (currentPosition.x > cubeCenter.x + cubeSize.x / 2)
-            {
-                currentPosition.x = cubeCenter.x - cubeSize.x / 2 + spacing;
-                currentPosition.z -= spacing;
             }
         }
     }

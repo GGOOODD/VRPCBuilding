@@ -68,7 +68,7 @@ public class AttachObject : MonoBehaviour
         interactable.hoverExited.AddListener(OutlineEnd);
 
         // Создать модель для выделения места подключения
-        CreateHighlight();
+        StartCoroutine(CreateHighlight());
 
         // Отслеживание нажатия кнопки для подключения и отключения объекта
         inputActions = GameObject.Find("InputActionAsset").GetComponent<InputActionAssetInfo>()?.inputActions;
@@ -295,9 +295,12 @@ public class AttachObject : MonoBehaviour
     }
 
     // Используется для подсветки места подключения
-    void CreateHighlight()
+    IEnumerator CreateHighlight()
     {
+        yield return null;
         _highlightParent = new(name + "_highlight");
+        _currentMatForHightlight = invis;
+        _highlightParent.SetActive(false);
         _highlightParent.transform.SetParent(attachPoint.transform);
         _highlightParent.transform.localPosition = new Vector3(0f, 0f, 0f);
         _highlightParent.transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
@@ -320,9 +323,8 @@ public class AttachObject : MonoBehaviour
                 materials[i] = invis;
             }
             newRenderer.materials = materials;
+            yield return null;
         }
-        _currentMatForHightlight = invis;
-        _highlightParent.SetActive(false);
     }
 
     void StartHighlight()
