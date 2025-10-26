@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
 
 [RequireComponent(typeof(Rigidbody), typeof(XRGrabInteractable))]
 public class AttachObjectCable : MonoBehaviour
@@ -39,14 +40,13 @@ public class AttachObjectCable : MonoBehaviour
         interactionManager = GameObject.Find("XR Interaction Manager").GetComponent<XRInteractionManager>();
 
         // Отслеживание нажатия кнопки для подключения и отключения объекта
-        inputActions = GameObject.Find("InputActionAsset").GetComponent<InputActionAssetInfo>()?.inputActions;
+        inputActions = GameObject.Find("Input Action Manager").GetComponent<InputActionManager>().actionAssets[0];
         if (inputActions != null) {
             activateActionLeft = inputActions.FindActionMap("XRI LeftHand Interaction").FindAction("Activate");
             activateActionRight = inputActions.FindActionMap("XRI RightHand Interaction").FindAction("Activate");
             interactable.selectEntered.AddListener(OnGrabEnter);
             interactable.selectExited.AddListener(OnGrabExit);
-        } else
-            Debug.Log("InputActionAssetInfo отсутствует в сцене или не имеет ссылку на InputActionAseet! Без него не будет работать подключение объектов.");
+        }
         
         if (MultipleConnections)
         {
@@ -88,7 +88,7 @@ public class AttachObjectCable : MonoBehaviour
     private void OnGrabEnter(SelectEnterEventArgs args)
     {
         interactor = args.interactorObject;
-        if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
+        if (args.interactorObject.transform.parent.gameObject.name == "Left Controller") {
             activateActionLeft.performed += TryActivateAction;
         } else {
             activateActionRight.performed += TryActivateAction;
@@ -98,7 +98,7 @@ public class AttachObjectCable : MonoBehaviour
     private void OnGrabExit(SelectExitEventArgs args)
     {
         interactor = null;
-        if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
+        if (args.interactorObject.transform.parent.gameObject.name == "Left Controller") {
             activateActionLeft.performed -= TryActivateAction;
         } else {
             activateActionRight.performed -= TryActivateAction;

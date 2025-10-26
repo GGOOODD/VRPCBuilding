@@ -6870,7 +6870,8 @@ PrefabInstance:
       propertyPath: <OnDisconnectEvents>k__BackingField.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgument
       value: 
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4008848422182405564, guid: 339d24f5a7aa4d44da51ceb6d5be4396, type: 3}
     m_RemovedGameObjects:
     - {fileID: 5046449265428425982, guid: 339d24f5a7aa4d44da51ceb6d5be4396, type: 3}
     - {fileID: 2691467868366172376, guid: 339d24f5a7aa4d44da51ceb6d5be4396, type: 3}
@@ -56901,7 +56902,7 @@ Transform:
   m_GameObject: {fileID: 2107108614}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.411, y: 1.301, z: 1.299}
+  m_LocalPosition: {x: -0.411, y: 1.301, z: 1.387}
   m_LocalScale: {x: 1.3, y: 0.19999999, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []

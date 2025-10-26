@@ -25,7 +25,6 @@ public class AttachObject : MonoBehaviour
     private InputAction activateActionLeft;
     private InputAction activateActionRight;
     private IXRSelectInteractor interactor;
-    private Outline outline;
     private XRGrabInteractable interactable;
     //private Rigidbody rb;
     private Collider checkCollider;
@@ -57,28 +56,22 @@ public class AttachObject : MonoBehaviour
     //Debug.Log("...");
     void Start()
     {
-        outline = GetComponent<Outline>();
-        outline.enabled = false;
+        GetComponent<Outline>().enabled = false;
         interactable = GetComponent<XRGrabInteractable>();
         objectInfo = GetComponentInParent<ItemCommon>();
         interactionManager = GameObject.Find("XR Interaction Manager").GetComponent<XRInteractionManager>();
-
-        // Отслеживание наведения рук на объект
-        interactable.hoverEntered.AddListener(OutlineStart);
-        interactable.hoverExited.AddListener(OutlineEnd);
 
         // Создать модель для выделения места подключения
         StartCoroutine(CreateHighlight());
 
         // Отслеживание нажатия кнопки для подключения и отключения объекта
-        inputActions = GameObject.Find("InputActionAsset").GetComponent<InputActionAssetInfo>()?.inputActions;
+        inputActions = GameObject.Find("Input Action Manager").GetComponent<InputActionManager>().actionAssets[0];
         if (inputActions != null) {
             activateActionLeft = inputActions.FindActionMap("XRI LeftHand Interaction").FindAction("Activate");
             activateActionRight = inputActions.FindActionMap("XRI RightHand Interaction").FindAction("Activate");
             interactable.selectEntered.AddListener(OnGrabEnter);
             interactable.selectExited.AddListener(OnGrabExit);
-        } else
-            Debug.Log("InputActionAssetInfo отсутствует в сцене или не имеет ссылку на InputActionAseet! Без него не будет работать подключение объектов.");
+        }
 
         if (parent) 
             saveScale = parent.localScale;
@@ -110,16 +103,6 @@ public class AttachObject : MonoBehaviour
         {
             wrong = Resources.Load<Material>("Materials/Wrong");
         }
-    }
-
-    private void OutlineStart(HoverEnterEventArgs args)
-    {
-        outline.enabled = true;
-    }
-
-    private void OutlineEnd(HoverExitEventArgs args)
-    {
-        outline.enabled = false;
     }
 
     private void MultipleConOnConnect()
@@ -168,9 +151,8 @@ public class AttachObject : MonoBehaviour
 
     private void OnGrabEnter(SelectEnterEventArgs args)
     {
-        outline.enabled = false;
         interactor = args.interactorObject;
-        if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
+        if (args.interactorObject.transform.parent.gameObject.name == "Left Controller") {
             activateActionLeft.performed += TryActivateAction;
         } else {
             activateActionRight.performed += TryActivateAction;
@@ -179,9 +161,8 @@ public class AttachObject : MonoBehaviour
 
     private void OnGrabExit(SelectExitEventArgs args)
     {
-        outline.enabled = true;
         interactor = null;
-        if (args.interactor.transform.parent.gameObject.name == "Left Controller") {
+        if (args.interactorObject.transform.parent.gameObject.name == "Left Controller") {
             activateActionLeft.performed -= TryActivateAction;
         } else {
             activateActionRight.performed -= TryActivateAction;

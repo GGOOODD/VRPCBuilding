@@ -27,8 +27,8 @@ public class ScaleMaterial : MonoBehaviour
                 this.transform.localScale.z * mr.material.mainTextureScale.y
                 : this.transform.localScale.y * mr.material.mainTextureScale.y)
             : TilingY;
-        Debug
-            .Log("" + tilingX + " " + tilingY);
+        //Debug
+        //    .Log("" + tilingX + " " + tilingY);
         mat.mainTextureScale = new Vector2(tilingX, tilingY);
         mr.material = mat;
     }
