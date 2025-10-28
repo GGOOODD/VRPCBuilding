@@ -32,7 +32,7 @@ public class ComponentRaycast : MonoBehaviour
         lineRenderer.startColor = rayColor;
         lineRenderer.endColor = rayColor;
         lineRenderer.startWidth = 0.005f;
-        lineRenderer.endWidth = 0.005f; 
+        lineRenderer.endWidth = 0.005f;
         lineRenderer.enabled = false;
 
         grabInteractable = GetComponent<XRGrabInteractable>();
@@ -102,12 +102,13 @@ public class ComponentRaycast : MonoBehaviour
             Vector3 endPoint = origin + direction * raycastDistance;
             lineRenderer.SetPosition(0, startPoint);
             lineRenderer.SetPosition(1, endPoint);
-        } else
+        }
+        else
         {
             descriptionPanel.SetActive(false);
             lineRenderer.enabled = false;
         }
-        
+
     }
 
 }
