@@ -34,10 +34,11 @@ public class OutlineManager : MonoBehaviour
     {
         List<IXRInteractable> targets = new();
         interactionManager.GetValidTargets(baseInteractor, targets);
-        IXRInteractable target = targets[0];
+        XRBaseInteractable target = targets[0] as XRBaseInteractable;
         outline = target.transform.GetOrAddComponent<Outline>();
-        outline.enabled = true;
         TryGetComponent(out LineRenderer line);
+        if (!target.isSelected)
+            outline.enabled = true;
         
         while (true)
         {
@@ -52,12 +53,15 @@ public class OutlineManager : MonoBehaviour
                     lineRendererWasDisabled = true;
                     continue;
                 }
-                else if (line.enabled && lineRendererWasDisabled)
+                if (line.enabled && lineRendererWasDisabled)
                 {
-                    outline.enabled = true;
+                    if (!target.isSelected)
+                        outline.enabled = true;
                     lineRendererWasDisabled = false;
                     continue;
                 }
+                if (!line.enabled)
+                    continue;
             }
             interactionManager.GetValidTargets(baseInteractor, targets);
             if (targets.Count == 0)
@@ -67,11 +71,12 @@ public class OutlineManager : MonoBehaviour
             }
             if (target.transform.gameObject != targets[0].transform.gameObject)
             {
-                target = targets[0];
                 outline.enabled = false;
+                target = targets[0] as XRBaseInteractable;
                 outline = target.transform.GetOrAddComponent<Outline>();
-                outline.enabled = true;
             }
+            if (!target.isSelected)
+                outline.enabled = true;
         }
         hover = false;
     }
@@ -83,6 +88,8 @@ public class OutlineManager : MonoBehaviour
 
     private void SelectExit(SelectExitEventArgs args)
     {
-        outline.enabled = true;
+        IXRSelectInteractable target = args.interactableObject;
+        if (!target.isSelected)
+                outline.enabled = true;
     }
 }
